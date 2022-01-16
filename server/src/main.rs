@@ -1,6 +1,7 @@
 mod game;
 
 use anyhow::Result;
+use game::Game;
 use std::net::SocketAddr;
 use structopt::StructOpt;
 use tokio::io::AsyncWriteExt;
@@ -25,6 +26,8 @@ async fn main() -> Result<()> {
     socket.bind(options.listen)?;
 
     let listener = socket.listen(1024)?;
+
+    let game = Game::new();
 
     loop {
         let (stream, peer) = listener.accept().await?;
