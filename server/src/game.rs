@@ -2,7 +2,10 @@ use rand::Rng;
 use std::collections::BTreeMap;
 use std::collections::VecDeque;
 use std::net::SocketAddr;
-use xenopeltis_common::{Color, Direction, Field};
+use tokio::sync::broadcast::{channel, Sender};
+use xenopeltis_common::{Color, Direction, Field, ServerMessage};
+
+const CHANNEL_SIZE: usize = 1024;
 
 pub struct State<T: Clone> {
     data: Vec<Vec<T>>,
@@ -38,23 +41,20 @@ pub struct Player {
 #[derive(Clone, Debug)]
 pub struct Game {
     state: Vec<Vec<Option<Field>>>,
-    snake: VecDeque<(isize, isize)>,
-    direction: Direction,
     players: BTreeMap<SocketAddr, Player>,
+    events: Sender<ServerMessage>,
 }
 
 impl Game {
     pub fn new() -> Self {
         let mut state = vec![vec!(None; 10); 10];
         state[5][5] = Some(Field::Snake(Color::default()));
-        let mut snake = VecDeque::new();
-        snake.push_back((5, 5));
+        let (events, _) = channel(CHANNEL_SIZE);
 
         Game {
             state,
-            direction: Direction::Right,
-            snake,
             players: BTreeMap::new(),
+            events,
         }
     }
 
@@ -98,10 +98,24 @@ impl Game {
         self.state[y][x] = Some(Field::Food);
     }
 
-    fn tick(&mut self) -> bool {
-        let head = self.snake.back().unwrap();
-        let dir = self.direction.offset();
-        let next = (dir.0 + head.0, dir.1 + head.1);
+    fn state_set(&mut self, row: usize, col: usize, field: Field) {
+        self.state[row][col] = Some(field);
+    }
+
+    pub fn tick(&mut self) {
+        let players: Vec<_> = self.players.keys().cloned().collect();
+        for player in players {
+            if !self.player_tick(player) {
+                self.players.remove(&player);
+            }
+        }
+    }
+
+    pub fn player_tick(&mut self, player: SocketAddr) -> bool {
+        let player = self.players.get_mut(&player).unwrap();
+        let head = player.snake.back().unwrap();
+        let dir = player.direction.offset();
+        let next = (dir.0 + head.0 as isize, dir.1 + head.1 as isize);
         let element = self
             .state
             .get(next.0 as usize)
@@ -117,7 +131,7 @@ impl Game {
                 return false;
             }
             Some(Field::Food) => {
-                self.snake.push_back(next);
+                player.snake.push_back((next.0 as usize, next.1 as usize));
                 self.state[next.0 as usize][next.1 as usize] = Some(Field::Snake(Color::default()));
                 self.add_food();
             }
@@ -125,9 +139,9 @@ impl Game {
                 return false;
             }
             None => {
-                self.snake.push_back(next);
+                player.snake.push_back((next.0 as usize, next.1 as usize));
                 self.state[next.0 as usize][next.1 as usize] = Some(Field::Snake(Color::default()));
-                let last = self.snake.pop_front().unwrap();
+                let last = player.snake.pop_front().unwrap();
                 self.state[last.0 as usize][last.1 as usize] = None;
             }
             _ => unreachable!(),

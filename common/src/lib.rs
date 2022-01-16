@@ -15,6 +15,12 @@ pub enum Direction {
     Right,
 }
 
+impl Default for Direction {
+    fn default() -> Self {
+        Direction::Right
+    }
+}
+
 impl Direction {
     pub fn offset(&self) -> (isize, isize) {
         match self {
