@@ -3,13 +3,13 @@
 version = 3
 
 [[package]]
-name = "client"
+name = "xenopeltis"
 version = "0.1.0"
 
 [[package]]
-name = "common"
+name = "xenopeltis-common"
 version = "0.1.0"
 
 [[package]]
-name = "server"
+name = "xenopeltis-server"
 version = "0.1.0"

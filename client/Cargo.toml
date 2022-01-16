@@ -1,8 +1,10 @@
 [package]
-name = "client"
+name = "xenopeltis"
 version = "0.1.0"
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+authors = ["Daniel He <he.daniel@protonmail.com", "Patrick Elsen <pelsen@xfbs.net>"]
+description = "Multiplayer terminal snake game"
+repository = "https://github.com/0xdh/xenopeltis"
+workspace = ".."
 
 [dependencies]
