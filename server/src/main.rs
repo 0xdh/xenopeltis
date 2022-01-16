@@ -1,9 +1,11 @@
-use xenopeltis_common::*;
-use structopt::StructOpt;
-use tokio::net::{TcpStream, TcpSocket};
-use tokio::io::AsyncWriteExt;
-use std::net::SocketAddr;
+mod game;
+
 use anyhow::Result;
+use std::net::SocketAddr;
+use structopt::StructOpt;
+use tokio::io::AsyncWriteExt;
+use tokio::net::{TcpSocket, TcpStream};
+use xenopeltis_common::*;
 
 #[derive(StructOpt)]
 struct Options {

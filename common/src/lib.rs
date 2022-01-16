@@ -15,6 +15,17 @@ pub enum Direction {
     Right,
 }
 
+impl Direction {
+    pub fn offset(&self) -> (isize, isize) {
+        match self {
+            Direction::Up => (-1, 0),
+            Direction::Down => (1, 0),
+            Direction::Left => (0, -1),
+            Direction::Right => (0, 1),
+        }
+    }
+}
+
 /// Client pressed a direction key, lets server know
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct DirectionMessage {
@@ -36,7 +47,7 @@ pub enum GameStateMessage {
 }
 
 /// RGB color.
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq, Eq)]
 pub struct Color {
     pub red: u8,
     pub green: u8,
@@ -47,10 +58,11 @@ pub struct Color {
 ///
 /// Can be empty, apple (edible) or snake. Snakes are differentiated
 /// by their color.
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub enum Field {
     Empty,
-    Apple,
+    Wall,
+    Food,
     Snake(Color),
 }
 
