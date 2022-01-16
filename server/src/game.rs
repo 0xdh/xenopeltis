@@ -58,7 +58,7 @@ impl Game {
         }
     }
 
-    pub fn add_player(&mut self, addr: SocketAddr) {
+    pub fn player_add(&mut self, addr: SocketAddr) {
         let (x, y) = self.empty_field();
         let mut snake = VecDeque::new();
         snake.push_back((y, x));
@@ -71,6 +71,13 @@ impl Game {
                 direction: Direction::default(),
             },
         );
+    }
+
+    pub fn direction_set(&mut self, addr: &SocketAddr, dir: Direction) {
+        match self.players.get_mut(addr) {
+            Some(player) => player.direction = dir,
+            None => {}
+        }
     }
 
     pub fn empty_field(&self) -> (usize, usize) {
