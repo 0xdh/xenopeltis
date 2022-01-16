@@ -8,3 +8,4 @@ repository = "https://github.com/0xdh/xenopeltis"
 workspace = ".."
 
 [dependencies]
+serde = { version = "1.0.133", features = ["derive"] }
