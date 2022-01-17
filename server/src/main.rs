@@ -10,6 +10,7 @@ use std::time::Duration;
 use structopt::StructOpt;
 use tokio::io::AsyncWriteExt;
 use tokio::net::{tcp::OwnedWriteHalf, TcpSocket, TcpStream};
+use tokio::sync::broadcast::{channel, Receiver};
 use tokio::sync::Mutex;
 use tokio_serde::{formats::SymmetricalBincode, SymmetricallyFramed};
 use tokio_util::codec::{FramedRead, FramedWrite, LengthDelimitedCodec};
@@ -21,7 +22,11 @@ struct Options {
     listen: SocketAddr,
 }
 
-async fn handler_write(writer: OwnedWriteHalf, peer: SocketAddr) {
+async fn handler_write(
+    writer: OwnedWriteHalf,
+    peer: SocketAddr,
+    mut events: Receiver<ServerMessage>,
+) {
     let framed_reader = FramedWrite::new(writer, LengthDelimitedCodec::new());
     let mut framed = SymmetricallyFramed::new(
         framed_reader,
@@ -32,17 +37,26 @@ async fn handler_write(writer: OwnedWriteHalf, peer: SocketAddr) {
         .send(ServerMessage::GameState(GameStateMessage::Playing))
         .await
         .unwrap();
+
+    loop {
+        match events.recv().await {
+            Ok(event) => {
+                framed.send(event).await;
+            }
+            _ => {}
+        }
+    }
 }
 
 async fn handler(game: Arc<Mutex<Game>>, mut connection: TcpStream, peer: SocketAddr) {
     info!("Connection from {}", peer);
     let mut game_lock = game.lock().await;
-    game_lock.player_add(peer);
+    let events = game_lock.player_add(peer);
     drop(game_lock);
 
     let (reader, writer) = connection.into_split();
 
-    tokio::spawn(handler_write(writer, peer));
+    tokio::spawn(handler_write(writer, peer, events));
 
     let framed_reader = FramedRead::new(reader, LengthDelimitedCodec::new());
     let mut framed = SymmetricallyFramed::new(
@@ -54,6 +68,8 @@ async fn handler(game: Arc<Mutex<Game>>, mut connection: TcpStream, peer: Socket
         match framed.try_next().await {
             Ok(Some(message)) => {
                 info!("Message from {}: {:?}", peer, message);
+                let mut game_lock = game.lock().await;
+                game_lock.handle(peer, &message).await;
             }
             Ok(None) => break,
             Err(e) => {

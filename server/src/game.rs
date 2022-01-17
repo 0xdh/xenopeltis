@@ -1,9 +1,10 @@
+use anyhow::Result;
 use rand::Rng;
 use std::collections::BTreeMap;
 use std::collections::VecDeque;
 use std::net::SocketAddr;
-use tokio::sync::broadcast::{channel, Sender};
-use xenopeltis_common::{Color, Direction, Field, ServerMessage};
+use tokio::sync::broadcast::{channel, Receiver, Sender};
+use xenopeltis_common::*;
 
 const CHANNEL_SIZE: usize = 1024;
 
@@ -58,7 +59,7 @@ impl Game {
         }
     }
 
-    pub fn player_add(&mut self, addr: SocketAddr) {
+    pub fn player_add(&mut self, addr: SocketAddr) -> Receiver<ServerMessage> {
         let (x, y) = self.empty_field();
         let mut snake = VecDeque::new();
         snake.push_back((y, x));
@@ -71,9 +72,19 @@ impl Game {
                 direction: Direction::default(),
             },
         );
+
+        self.events.subscribe()
     }
 
-    pub fn direction_set(&mut self, addr: &SocketAddr, dir: Direction) {
+    pub fn player_remove(&mut self, addr: &SocketAddr) {
+        if let Some(player) = self.players.remove(addr) {
+            for (row, col) in &player.snake {
+                // TODO: remove snake fields
+            }
+        }
+    }
+
+    pub fn player_direction(&mut self, addr: &SocketAddr, dir: Direction) {
         match self.players.get_mut(addr) {
             Some(player) => player.direction = dir,
             None => {}
@@ -98,8 +109,14 @@ impl Game {
         self.state[y][x] = Some(Field::Food);
     }
 
-    fn state_set(&mut self, row: usize, col: usize, field: Field) {
+    fn state_set(&mut self, row: usize, col: usize, field: Field) -> Result<()> {
         self.state[row][col] = Some(field);
+        self.events
+            .send(ServerMessage::FieldChange(FieldChangeMessage {
+                coordinate: Coordinate::new(row, col),
+                field,
+            }))?;
+        Ok(())
     }
 
     pub fn tick(&mut self) {
@@ -132,7 +149,11 @@ impl Game {
             }
             Some(Field::Food) => {
                 player.snake.push_back((next.0 as usize, next.1 as usize));
-                self.state[next.0 as usize][next.1 as usize] = Some(Field::Snake(Color::default()));
+                self.state_set(
+                    next.0 as usize,
+                    next.1 as usize,
+                    Field::Snake(Color::default()),
+                );
                 self.add_food();
             }
             Some(Field::Snake(_)) => {
@@ -140,13 +161,26 @@ impl Game {
             }
             None => {
                 player.snake.push_back((next.0 as usize, next.1 as usize));
-                self.state[next.0 as usize][next.1 as usize] = Some(Field::Snake(Color::default()));
                 let last = player.snake.pop_front().unwrap();
-                self.state[last.0 as usize][last.1 as usize] = None;
+
+                self.state_set(
+                    next.0 as usize,
+                    next.1 as usize,
+                    Field::Snake(Color::default()),
+                );
+                self.state_set(next.0 as usize, next.1 as usize, Field::Empty);
             }
             _ => unreachable!(),
         }
 
         true
+    }
+
+    pub async fn handle(&mut self, peer: SocketAddr, message: &ClientMessage) {
+        use ClientMessage::*;
+        match message {
+            Direction(dir) => self.player_direction(&peer, dir.direction),
+            _ => {}
+        }
     }
 }
