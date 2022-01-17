@@ -1,4 +1,4 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 /// Messages coming from the client to the server.
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -43,7 +43,6 @@ pub struct DirectionMessage {
 pub enum ServerMessage {
     FieldChange(FieldChangeMessage),
     GameState(GameStateMessage),
-
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -82,10 +81,7 @@ pub struct Coordinate {
 
 impl Coordinate {
     pub fn new(row: usize, col: usize) -> Coordinate {
-        Coordinate {
-            row,
-            col,
-        }
+        Coordinate { row, col }
     }
 }
 

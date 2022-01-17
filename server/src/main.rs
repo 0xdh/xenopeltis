@@ -55,7 +55,6 @@ async fn handler(game: Arc<Mutex<Game>>, mut connection: TcpStream, peer: Socket
     drop(game_lock);
 
     let (reader, writer) = connection.into_split();
-
     tokio::spawn(handler_write(writer, peer, events));
 
     let framed_reader = FramedRead::new(reader, LengthDelimitedCodec::new());
@@ -66,18 +65,24 @@ async fn handler(game: Arc<Mutex<Game>>, mut connection: TcpStream, peer: Socket
 
     loop {
         match framed.try_next().await {
+            // we got a valid message, handle it
             Ok(Some(message)) => {
                 info!("Message from {}: {:?}", peer, message);
                 let mut game_lock = game.lock().await;
                 game_lock.handle(peer, &message).await;
             }
+            // end of stream (client closed connection)
             Ok(None) => break,
+            // some kind of error happened, log it
             Err(e) => {
                 error!("Error from {}: {}", peer, e);
                 break;
             }
         }
     }
+
+    let mut game_lock = game.lock().await;
+    game_lock.player_remove(&peer);
 }
 
 async fn game_loop(game: Arc<Mutex<Game>>) {
