@@ -59,16 +59,17 @@ impl Game {
     }
 
     pub fn player_add(&mut self, addr: SocketAddr) -> Receiver<ServerMessage> {
+        let color = Color::default();
         let (row, col) = self.empty_field();
         let mut snake = VecDeque::new();
         snake.push_back((row, col));
-        self.state_set(row, col, Field::Snake(Color::default()));
+        self.state_set(row, col, Field::Snake(color));
 
         self.players.insert(
             addr,
             Player {
                 snake,
-                color: Color::default(),
+                color,
                 direction: Direction::default(),
             },
         );
@@ -149,11 +150,8 @@ impl Game {
             }
             Field::Food => {
                 player.snake.push_back((next.0 as usize, next.1 as usize));
-                self.state_set(
-                    next.0 as usize,
-                    next.1 as usize,
-                    Field::Snake(Color::default()),
-                );
+                let color = player.color;
+                self.state_set(next.0 as usize, next.1 as usize, Field::Snake(color));
                 self.add_food();
             }
             Field::Snake(_) => {
@@ -162,12 +160,9 @@ impl Game {
             Field::Empty => {
                 player.snake.push_back((next.0 as usize, next.1 as usize));
                 let last = player.snake.pop_front().unwrap();
+                let color = player.color;
 
-                self.state_set(
-                    next.0 as usize,
-                    next.1 as usize,
-                    Field::Snake(Color::default()),
-                );
+                self.state_set(next.0 as usize, next.1 as usize, Field::Snake(color));
                 self.state_set(next.0 as usize, next.1 as usize, Field::Empty);
             }
         }
