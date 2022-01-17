@@ -105,9 +105,8 @@ impl Game {
     }
 
     fn add_food(&mut self) {
-        let (y, x) = self.empty_field();
-        // TODO: use state_set
-        self.state[y][x] = Field::Food;
+        let (row, col) = self.empty_field();
+        self.state_set(row, col, Field::Food);
     }
 
     fn state_set(&mut self, row: usize, col: usize, field: Field) -> Result<()> {
