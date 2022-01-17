@@ -41,15 +41,14 @@ pub struct Player {
 
 #[derive(Clone, Debug)]
 pub struct Game {
-    state: Vec<Vec<Option<Field>>>,
+    state: Vec<Vec<Field>>,
     players: BTreeMap<SocketAddr, Player>,
     events: Sender<ServerMessage>,
 }
 
 impl Game {
     pub fn new() -> Self {
-        let mut state = vec![vec!(None; 10); 10];
-        state[5][5] = Some(Field::Snake(Color::default()));
+        let mut state = vec![vec!(Field::Empty; 10); 10];
         let (events, _) = channel(CHANNEL_SIZE);
 
         Game {
@@ -60,9 +59,10 @@ impl Game {
     }
 
     pub fn player_add(&mut self, addr: SocketAddr) -> Receiver<ServerMessage> {
-        let (x, y) = self.empty_field();
+        let (row, col) = self.empty_field();
         let mut snake = VecDeque::new();
-        snake.push_back((y, x));
+        snake.push_back((row, col));
+        self.state_set(row, col, Field::Snake(Color::default()));
 
         self.players.insert(
             addr,
@@ -98,7 +98,7 @@ impl Game {
             let y = rng.gen_range(0..self.state.len());
             let x = rng.gen_range(0..self.state[0].len());
 
-            if self.state[y][x] == None {
+            if self.state[y][x] == Field::Empty {
                 return (y, x);
             }
         }
@@ -106,11 +106,12 @@ impl Game {
 
     fn add_food(&mut self) {
         let (y, x) = self.empty_field();
-        self.state[y][x] = Some(Field::Food);
+        // TODO: use state_set
+        self.state[y][x] = Field::Food;
     }
 
     fn state_set(&mut self, row: usize, col: usize, field: Field) -> Result<()> {
-        self.state[row][col] = Some(field);
+        self.state[row][col] = field;
         self.events
             .send(ServerMessage::FieldChange(FieldChangeMessage {
                 coordinate: Coordinate::new(row, col),
@@ -144,10 +145,10 @@ impl Game {
         };
 
         match element {
-            Some(Field::Wall) => {
+            Field::Wall => {
                 return false;
             }
-            Some(Field::Food) => {
+            Field::Food => {
                 player.snake.push_back((next.0 as usize, next.1 as usize));
                 self.state_set(
                     next.0 as usize,
@@ -156,10 +157,10 @@ impl Game {
                 );
                 self.add_food();
             }
-            Some(Field::Snake(_)) => {
+            Field::Snake(_) => {
                 return false;
             }
-            None => {
+            Field::Empty => {
                 player.snake.push_back((next.0 as usize, next.1 as usize));
                 let last = player.snake.pop_front().unwrap();
 
@@ -170,7 +171,6 @@ impl Game {
                 );
                 self.state_set(next.0 as usize, next.1 as usize, Field::Empty);
             }
-            _ => unreachable!(),
         }
 
         true
