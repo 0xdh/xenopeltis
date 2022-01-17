@@ -79,7 +79,7 @@ impl Game {
     pub fn player_remove(&mut self, addr: &SocketAddr) {
         if let Some(player) = self.players.remove(addr) {
             for (row, col) in &player.snake {
-                // TODO: remove snake fields
+                self.state_set(*row, *col, Field::Empty);
             }
         }
     }
