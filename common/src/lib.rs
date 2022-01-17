@@ -7,7 +7,7 @@ pub enum ClientMessage {
     Quit,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug)]
 pub enum Direction {
     Up,
     Down,
@@ -43,6 +43,7 @@ pub struct DirectionMessage {
 pub enum ServerMessage {
     FieldChange(FieldChangeMessage),
     GameState(GameStateMessage),
+
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -53,7 +54,7 @@ pub enum GameStateMessage {
 }
 
 /// RGB color.
-#[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct Color {
     pub red: u8,
     pub green: u8,
@@ -64,7 +65,7 @@ pub struct Color {
 ///
 /// Can be empty, apple (edible) or snake. Snakes are differentiated
 /// by their color.
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Field {
     Empty,
     Wall,
@@ -73,10 +74,19 @@ pub enum Field {
 }
 
 /// Represents a coordinate on the game field
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Copy, Default, PartialEq, Eq, Debug)]
 pub struct Coordinate {
-    pub x: usize,
-    pub y: usize,
+    pub row: usize,
+    pub col: usize,
+}
+
+impl Coordinate {
+    pub fn new(row: usize, col: usize) -> Coordinate {
+        Coordinate {
+            row,
+            col,
+        }
+    }
 }
 
 /// A field has just changed the field type
