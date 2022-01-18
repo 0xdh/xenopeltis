@@ -665,6 +665,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "termion-input-tokio"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5bba8c7cfdbb700454e9b7845d7365703772c125584ef05fe2f007fe497c9ac9"
+dependencies = [
+ "bytes",
+ "futures",
+ "termion",
+ "tokio",
+ "tokio-util",
+]
+
+[[package]]
 name = "textwrap"
 version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -804,8 +817,10 @@ name = "xenopeltis"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "futures",
  "structopt",
  "termion",
+ "termion-input-tokio",
  "tokio",
  "tokio-serde",
  "tokio-util",

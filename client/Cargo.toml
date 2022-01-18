@@ -9,9 +9,11 @@ workspace = ".."
 
 [dependencies]
 anyhow = "1.0.52"
+futures = "0.3.19"
 structopt = "0.3.25"
 termion = "1.5.6"
-tokio = { version = "1.15.0", features = ["rt", "macros", "net"] }
+termion-input-tokio = "0.3.0"
+tokio = { version = "1.15.0", features = ["rt", "macros", "net", "io-std"] }
 tokio-serde = { version = "0.8.0", features = ["bincode"] }
 tokio-util = { version = "0.6.9", features = ["codec"] }
 xenopeltis-common = { path = "../common", version = "0.1.0" }
