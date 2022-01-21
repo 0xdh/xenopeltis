@@ -20,7 +20,7 @@ use xenopeltis_common::*;
 
 #[derive(StructOpt, Clone, Debug)]
 pub struct Options {
-    server: SocketAddr,
+    server: String,
 }
 
 pub struct State {
