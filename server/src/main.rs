@@ -26,6 +26,8 @@ struct Options {
     cols: usize,
     #[structopt(long, short, default_value = "2")]
     food: usize,
+    #[structopt(long, short, default_value = "500")]
+    tick: u64,
 }
 
 async fn handler_write(
@@ -95,8 +97,8 @@ async fn handler(game: Arc<Mutex<Game>>, mut connection: TcpStream, peer: Socket
     game_lock.player_remove(&peer);
 }
 
-async fn game_loop(game: Arc<Mutex<Game>>) {
-    let mut interval = tokio::time::interval(Duration::from_secs(1));
+async fn game_loop(game: Arc<Mutex<Game>>, duration: Duration) {
+    let mut interval = tokio::time::interval(duration);
     loop {
         interval.tick().await;
         info!("Running game tick");
@@ -124,7 +126,7 @@ async fn main() -> Result<()> {
 
     let game = Arc::new(Mutex::new(game));
 
-    tokio::spawn(game_loop(game.clone()));
+    tokio::spawn(game_loop(game.clone(), Duration::from_millis(options.tick)));
 
     loop {
         let (stream, peer) = listener.accept().await?;
