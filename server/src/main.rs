@@ -27,9 +27,9 @@ async fn handler_write(
     peer: SocketAddr,
     mut events: Receiver<ServerMessage>,
 ) {
-    let framed_reader = FramedWrite::new(writer, LengthDelimitedCodec::new());
+    let framed_writer = FramedWrite::new(writer, LengthDelimitedCodec::new());
     let mut framed = SymmetricallyFramed::new(
-        framed_reader,
+        framed_writer,
         SymmetricalBincode::<ServerMessage>::default(),
     );
 

@@ -73,7 +73,7 @@ pub enum Field {
 }
 
 /// Represents a coordinate on the game field
-#[derive(Serialize, Deserialize, Clone, Copy, Default, PartialEq, Eq, Debug)]
+#[derive(Serialize, Deserialize, Clone, Copy, Default, PartialEq, Eq, Debug, PartialOrd, Ord)]
 pub struct Coordinate {
     pub row: usize,
     pub col: usize,
