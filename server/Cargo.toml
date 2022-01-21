@@ -5,6 +5,7 @@ edition = "2021"
 authors = ["Daniel He <he.daniel@protonmail.com", "Patrick Elsen <pelsen@xfbs.net>"]
 description = "Server for xenopeltis snake game"
 repository = "https://github.com/0xdh/xenopeltis"
+license = "MIT"
 workspace = ".."
 
 [dependencies]

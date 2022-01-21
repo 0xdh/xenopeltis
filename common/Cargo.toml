@@ -5,6 +5,7 @@ edition = "2021"
 authors = ["Daniel He <he.daniel@protonmail.com", "Patrick Elsen <pelsen@xfbs.net>"]
 description = "Common files shared by xenopeltis server and client"
 repository = "https://github.com/0xdh/xenopeltis"
+license = "MIT"
 workspace = ".."
 
 [dependencies]
