@@ -20,9 +20,16 @@ use xenopeltis_common::*;
 struct Options {
     #[structopt(long, short, default_value = "0.0.0.0:8000")]
     listen: SocketAddr,
+    #[structopt(long, short, default_value = "20")]
+    rows: usize,
+    #[structopt(long, short, default_value = "80")]
+    cols: usize,
+    #[structopt(long, short, default_value = "2")]
+    food: usize,
 }
 
 async fn handler_write(
+    game: Arc<Mutex<Game>>,
     writer: OwnedWriteHalf,
     peer: SocketAddr,
     mut events: Receiver<ServerMessage>,
@@ -33,10 +40,13 @@ async fn handler_write(
         SymmetricalBincode::<ServerMessage>::default(),
     );
 
-    framed
-        .send(ServerMessage::GameState(GameStateMessage::Playing))
-        .await
-        .unwrap();
+    let game_lock = game.lock().await;
+    let messages = game_lock.messages_initial(peer);
+    drop(game_lock);
+
+    for message in messages {
+        framed.send(message).await;
+    }
 
     loop {
         match events.recv().await {
@@ -55,7 +65,7 @@ async fn handler(game: Arc<Mutex<Game>>, mut connection: TcpStream, peer: Socket
     drop(game_lock);
 
     let (reader, writer) = connection.into_split();
-    tokio::spawn(handler_write(writer, peer, events));
+    tokio::spawn(handler_write(game.clone(), writer, peer, events));
 
     let framed_reader = FramedRead::new(reader, LengthDelimitedCodec::new());
     let mut framed = SymmetricallyFramed::new(
@@ -105,7 +115,15 @@ async fn main() -> Result<()> {
 
     let listener = socket.listen(1024)?;
 
-    let game = Arc::new(Mutex::new(Game::new()));
+    let mut game = Game::new(options.rows, options.cols);
+
+    // add food
+    for x in 0..options.food {
+        game.add_food();
+    }
+
+    let game = Arc::new(Mutex::new(game));
+
     tokio::spawn(game_loop(game.clone()));
 
     loop {

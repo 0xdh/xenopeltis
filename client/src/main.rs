@@ -1,22 +1,22 @@
-use structopt::StructOpt;
 use std::net::SocketAddr;
+use structopt::StructOpt;
 
+use anyhow::Result;
+use futures::prelude::*;
+use std::collections::BTreeMap;
+use std::io::{stdin, stdout, Write};
+use std::sync::Arc;
+use std::time::Duration;
 use termion::event::Key;
 use termion::input::TermRead;
 use termion::raw::IntoRawMode;
 use termion::screen::*;
-use std::io::{Write, stdout, stdin};
-use std::collections::BTreeMap;
-use std::sync::Arc;
-use std::time::Duration;
-use tokio::sync::Mutex;
+use termion_input_tokio::TermReadAsync;
 use tokio::net::{tcp::OwnedReadHalf, TcpStream};
-use xenopeltis_common::*;
-use anyhow::Result;
+use tokio::sync::Mutex;
 use tokio_serde::{formats::SymmetricalBincode, SymmetricallyFramed};
 use tokio_util::codec::{FramedRead, FramedWrite, LengthDelimitedCodec};
-use futures::prelude::*;
-use termion_input_tokio::TermReadAsync;
+use xenopeltis_common::*;
 
 #[derive(StructOpt, Clone, Debug)]
 pub struct Options {
@@ -26,6 +26,7 @@ pub struct Options {
 pub struct State {
     data: BTreeMap<Coordinate, Field>,
     data_dirty: BTreeMap<Coordinate, Field>,
+    game_state: GameStateMessage,
     exit: bool,
 }
 
@@ -34,6 +35,7 @@ impl State {
         State {
             data: BTreeMap::new(),
             data_dirty: BTreeMap::new(),
+            game_state: GameStateMessage::Playing,
             exit: false,
         }
     }
@@ -48,9 +50,19 @@ pub async fn handle_stream(state: Arc<Mutex<State>>, reader: OwnedReadHalf) -> R
 
     loop {
         match framed.try_next().await {
-            Ok(Some(message)) => {
+            Ok(Some(ServerMessage::FieldChange(field_state))) => {
+                let mut state_lock = state.lock().await;
+                state_lock
+                    .data_dirty
+                    .insert(field_state.coordinate, field_state.field);
             }
-            _ => {}
+            Ok(Some(ServerMessage::GameState(game_state))) => {
+                let mut state_lock = state.lock().await;
+                state_lock.game_state = game_state;
+            }
+            _ => {
+                break;
+            }
         }
     }
 
@@ -65,6 +77,9 @@ pub async fn draw_task_run(state: Arc<Mutex<State>>) -> Result<()> {
     let mut screen = AlternateScreen::from(stdout().into_raw_mode()?);
     write!(screen, "{}", termion::cursor::Hide)?;
     screen.flush().unwrap();
+    let mut count: usize = 0;
+    let mut dirty: usize = 0;
+    let mut last_field: Field = Field::Empty;
 
     let mut interval = tokio::time::interval(Duration::from_millis(20));
     loop {
@@ -74,10 +89,30 @@ pub async fn draw_task_run(state: Arc<Mutex<State>>) -> Result<()> {
             break;
         }
 
+        //write!(screen, "{}{}", termion::cursor::Goto(1, 1), count)?;
+        //write!(screen, "{}{}: {:?}", termion::cursor::Goto(1, 2), dirty, last_field)?;
+
         // draw dirty fields
         for (coordinate, field) in std::mem::take(&mut state_lock.data_dirty).iter() {
+            last_field = *field;
+            let shape = match field {
+                Field::Empty => " ",
+                Field::Food => ".",
+                Field::Snake(_) => "X",
+                Field::Wall => "|",
+            };
+            write!(
+                screen,
+                "{}{}",
+                termion::cursor::Goto(coordinate.col as u16 + 1, coordinate.row as u16 + 1),
+                shape
+            )?;
             state_lock.data.insert(*coordinate, *field);
+            dirty += 1;
         }
+
+        screen.flush()?;
+        count += 1;
     }
 
     write!(screen, "{}", termion::cursor::Show)?;
@@ -108,18 +143,23 @@ async fn main() -> Result<()> {
         let key = keys.try_next().await?.unwrap();
         match key {
             Key::Char('q') => {
-            },
+                let mut state_lock = state.lock().await;
+                state_lock.exit = true;
+                break;
+            }
             Key::Left | Key::Right | Key::Up | Key::Down => {
-                framed.send(ClientMessage::Direction(DirectionMessage {
-                    direction: match key {
-                        Key::Left => Direction::Left,
-                        Key::Right => Direction::Right,
-                        Key::Up => Direction::Up,
-                        Key::Down => Direction::Down,
-                        _ => unreachable!()
-                    },
-                })).await;
-            },
+                framed
+                    .send(ClientMessage::Direction(DirectionMessage {
+                        direction: match key {
+                            Key::Left => Direction::Left,
+                            Key::Right => Direction::Right,
+                            Key::Up => Direction::Up,
+                            Key::Down => Direction::Down,
+                            _ => unreachable!(),
+                        },
+                    }))
+                    .await;
+            }
             _ => {}
         }
     }
