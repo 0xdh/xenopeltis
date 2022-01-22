@@ -26,7 +26,7 @@ struct Options {
     cols: usize,
     #[structopt(long, short, default_value = "2")]
     food: usize,
-    #[structopt(long, short, default_value = "500")]
+    #[structopt(long, short, default_value = "100")]
     tick: u64,
 }
 
@@ -118,11 +118,7 @@ async fn main() -> Result<()> {
     let listener = socket.listen(1024)?;
 
     let mut game = Game::new(options.rows, options.cols);
-
-    // add food
-    for x in 0..options.food {
-        game.add_food();
-    }
+    game.food_set(options.food);
 
     let game = Arc::new(Mutex::new(game));
 

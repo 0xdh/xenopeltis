@@ -45,6 +45,8 @@ pub struct Game {
     state: Vec<Vec<Field>>,
     players: BTreeMap<SocketAddr, Player>,
     events: Sender<ServerMessage>,
+    food_current: usize,
+    food_target: usize,
 }
 
 impl Game {
@@ -68,6 +70,8 @@ impl Game {
             state,
             players: BTreeMap::new(),
             events,
+            food_current: 0,
+            food_target: 0,
         }
     }
 
@@ -95,9 +99,18 @@ impl Game {
     }
 
     pub fn player_remove(&mut self, addr: &SocketAddr) {
+        let mut food = true;
         if let Some(player) = self.players.remove(addr) {
             for (row, col) in &player.snake {
-                self.state_set(*row, *col, Field::Food);
+                self.state_set(
+                    *row,
+                    *col,
+                    match food {
+                        true => Field::Food,
+                        false => Field::Empty,
+                    },
+                );
+                //food = !food;
             }
         }
     }
@@ -126,13 +139,37 @@ impl Game {
         }
     }
 
-    pub fn add_food(&mut self) {
+    pub fn food_set(&mut self, food: usize) {
+        self.food_target = food;
+        while self.food_current < self.food_target {
+            self.food_add();
+        }
+    }
+
+    fn food_add(&mut self) {
         let (row, col) = self.empty_field();
         self.state_set(row, col, Field::Food);
     }
 
+    fn food_renew(&mut self) {
+        if self.food_current < self.food_target {
+            self.food_add();
+        }
+    }
+
     fn state_set(&mut self, row: usize, col: usize, field: Field) -> Result<()> {
+        // track changes in food supply
+        use Field::*;
+        match (self.state[row][col], field) {
+            (Food, x) if x != Food => self.food_current -= 1,
+            (x, Food) if x != Food => self.food_current += 1,
+            _ => {}
+        }
+
+        // update field
         self.state[row][col] = field;
+
+        // send field change event to players
         self.events
             .send(ServerMessage::FieldChange(FieldChangeMessage {
                 coordinate: Coordinate::new(row, col),
@@ -198,7 +235,7 @@ impl Game {
                 player.snake.push_back((next.0 as usize, next.1 as usize));
                 let color = player.color;
                 self.state_set(next.0 as usize, next.1 as usize, Field::Snake(color));
-                self.add_food();
+                self.food_renew();
             }
             Field::Snake(_) => {
                 info!("Player {} hit snake", peer);
