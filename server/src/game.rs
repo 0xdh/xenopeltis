@@ -106,7 +106,7 @@ impl Game {
                     *row,
                     *col,
                     match food {
-                        true => Field::Food,
+                        true => Field::Food(true),
                         false => Field::Empty,
                     },
                 );
@@ -148,7 +148,7 @@ impl Game {
 
     fn food_add(&mut self) {
         let (row, col) = self.empty_field();
-        self.state_set(row, col, Field::Food);
+        self.state_set(row, col, Field::Food(false));
     }
 
     fn food_renew(&mut self) {
@@ -161,8 +161,8 @@ impl Game {
         // track changes in food supply
         use Field::*;
         match (self.state[row][col], field) {
-            (Food, x) if x != Food => self.food_current -= 1,
-            (x, Food) if x != Food => self.food_current += 1,
+            (Food(_), x) if !x.food() => self.food_current -= 1,
+            (x, Food(_)) if !x.food() => self.food_current += 1,
             _ => {}
         }
 
@@ -230,7 +230,7 @@ impl Game {
                 info!("Player {} collided with wall", peer);
                 return false;
             }
-            Field::Food => {
+            Field::Food(_) => {
                 info!("Player {} got food", peer);
                 player.snake.push_back((next.0 as usize, next.1 as usize));
                 let color = player.color;

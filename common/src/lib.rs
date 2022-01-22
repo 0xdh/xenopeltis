@@ -78,8 +78,17 @@ pub struct Color {
 pub enum Field {
     Empty,
     Wall,
-    Food,
+    Food(bool),
     Snake(Color),
+}
+
+impl Field {
+    pub fn food(&self) -> bool {
+        match self {
+            Field::Food(_) => true,
+            _ => false,
+        }
+    }
 }
 
 /// Represents a coordinate on the game field

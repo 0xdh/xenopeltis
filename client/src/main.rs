@@ -90,7 +90,8 @@ pub async fn draw_task_run(state: Arc<Mutex<State>>) -> Result<()> {
         for (coordinate, field) in std::mem::take(&mut state_lock.data_dirty).iter() {
             let shape = match field {
                 Field::Empty => "  ",
-                Field::Food => "🍎",
+                Field::Food(false) => "🍏",
+                Field::Food(true) => "🍎",
                 Field::Snake(_) => "██",
                 Field::Wall => "▒▒",
             };
