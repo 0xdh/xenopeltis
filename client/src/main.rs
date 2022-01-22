@@ -77,9 +77,6 @@ pub async fn draw_task_run(state: Arc<Mutex<State>>) -> Result<()> {
     let mut screen = AlternateScreen::from(stdout().into_raw_mode()?);
     write!(screen, "{}", termion::cursor::Hide)?;
     screen.flush().unwrap();
-    let mut count: usize = 0;
-    let mut dirty: usize = 0;
-    let mut last_field: Field = Field::Empty;
 
     let mut interval = tokio::time::interval(Duration::from_millis(20));
     loop {
@@ -89,12 +86,8 @@ pub async fn draw_task_run(state: Arc<Mutex<State>>) -> Result<()> {
             break;
         }
 
-        //write!(screen, "{}{}", termion::cursor::Goto(1, 1), count)?;
-        //write!(screen, "{}{}: {:?}", termion::cursor::Goto(1, 2), dirty, last_field)?;
-
         // draw dirty fields
         for (coordinate, field) in std::mem::take(&mut state_lock.data_dirty).iter() {
-            last_field = *field;
             let shape = match field {
                 Field::Empty => " ",
                 Field::Food => ".",
@@ -108,11 +101,9 @@ pub async fn draw_task_run(state: Arc<Mutex<State>>) -> Result<()> {
                 shape
             )?;
             state_lock.data.insert(*coordinate, *field);
-            dirty += 1;
         }
 
         screen.flush()?;
-        count += 1;
     }
 
     write!(screen, "{}", termion::cursor::Show)?;
@@ -137,7 +128,6 @@ async fn main() -> Result<()> {
 
     let draw_task = tokio::spawn(draw_task(state.clone()));
 
-    let stdin = stdin();
     let mut keys = tokio::io::stdin().keys_stream();
     loop {
         let key = keys.try_next().await?.unwrap();
