@@ -1,6 +1,6 @@
 [package]
 name = "xenopeltis-server"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 authors = ["Daniel He <he.daniel@protonmail.com", "Patrick Elsen <pelsen@xfbs.net>"]
 description = "Server for xenopeltis snake game"

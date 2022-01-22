@@ -1,6 +1,6 @@
 [package]
 name = "xenopeltis"
-version = "0.1.1"
+version = "0.2.1"
 edition = "2021"
 authors = ["Daniel He <he.daniel@protonmail.com", "Patrick Elsen <pelsen@xfbs.net>"]
 description = "Multiplayer terminal snake game"
