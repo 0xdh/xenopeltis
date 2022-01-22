@@ -76,7 +76,7 @@ pub async fn draw_task(state: Arc<Mutex<State>>) {
 pub async fn draw_task_run(state: Arc<Mutex<State>>) -> Result<()> {
     let mut screen = AlternateScreen::from(stdout().into_raw_mode()?);
     write!(screen, "{}", termion::cursor::Hide)?;
-    screen.flush().unwrap();
+    screen.flush()?;
 
     let mut interval = tokio::time::interval(Duration::from_millis(20));
     loop {
@@ -89,15 +89,15 @@ pub async fn draw_task_run(state: Arc<Mutex<State>>) -> Result<()> {
         // draw dirty fields
         for (coordinate, field) in std::mem::take(&mut state_lock.data_dirty).iter() {
             let shape = match field {
-                Field::Empty => " ",
-                Field::Food => ".",
-                Field::Snake(_) => "X",
-                Field::Wall => "|",
+                Field::Empty => "  ",
+                Field::Food => "🍎",
+                Field::Snake(_) => "██",
+                Field::Wall => "▒▒",
             };
             write!(
                 screen,
                 "{}{}",
-                termion::cursor::Goto(coordinate.col as u16 + 1, coordinate.row as u16 + 1),
+                termion::cursor::Goto(2 * coordinate.col as u16 + 1, coordinate.row as u16 + 1),
                 shape
             )?;
             state_lock.data.insert(*coordinate, *field);

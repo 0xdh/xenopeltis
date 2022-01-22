@@ -108,7 +108,7 @@ impl Game {
                 if player.direction != dir.opposite() {
                     player.direction = dir;
                 }
-            },
+            }
             None => {}
         }
     }
