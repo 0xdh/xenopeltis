@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum ClientMessage {
     Direction(DirectionMessage),
+    Restart,
     Quit,
 }
 
@@ -52,11 +53,16 @@ pub struct DirectionMessage {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum ServerMessage {
     FieldChange(FieldChangeMessage),
-    GameState(GameStateMessage),
+    PlayerState(PlayerStateMessage),
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub enum GameStateMessage {
+pub struct PlayerStateMessage {
+    pub state: PlayerState,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub enum PlayerState {
     Playing,
     Won,
     Lost,

@@ -25,7 +25,7 @@ pub struct Options {
 pub struct State {
     data: BTreeMap<Coordinate, Field>,
     data_dirty: BTreeMap<Coordinate, Field>,
-    game_state: GameStateMessage,
+    game_state: PlayerState,
     exit: bool,
 }
 
@@ -34,7 +34,7 @@ impl State {
         State {
             data: BTreeMap::new(),
             data_dirty: BTreeMap::new(),
-            game_state: GameStateMessage::Playing,
+            game_state: PlayerState::Playing,
             exit: false,
         }
     }
@@ -55,9 +55,9 @@ pub async fn handle_stream(state: Arc<Mutex<State>>, reader: OwnedReadHalf) -> R
                     .data_dirty
                     .insert(field_state.coordinate, field_state.field);
             }
-            Ok(Some(ServerMessage::GameState(game_state))) => {
+            Ok(Some(ServerMessage::PlayerState(player_state))) => {
                 let mut state_lock = state.lock().await;
-                state_lock.game_state = game_state;
+                state_lock.game_state = player_state.state;
             }
             _ => {
                 break;
@@ -137,6 +137,7 @@ async fn main() -> Result<()> {
                 state_lock.exit = true;
                 break;
             }
+            Key::Char('r') | Key::Char(' ') => framed.send(ClientMessage::Restart).await?,
             Key::Left | Key::Right | Key::Up | Key::Down => {
                 framed
                     .send(ClientMessage::Direction(DirectionMessage {

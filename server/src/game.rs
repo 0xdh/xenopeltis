@@ -98,6 +98,10 @@ impl Game {
         self.events.subscribe()
     }
 
+    pub fn player_exists(&mut self, peer: SocketAddr) -> bool {
+        self.players.contains_key(&peer)
+    }
+
     pub fn player_remove(&mut self, addr: &SocketAddr) {
         let mut food = true;
         if let Some(player) = self.players.remove(addr) {
@@ -181,7 +185,9 @@ impl Game {
     pub fn messages_initial(&self, peer: SocketAddr) -> Vec<ServerMessage> {
         let mut messages = vec![];
 
-        messages.push(ServerMessage::GameState(GameStateMessage::Playing));
+        messages.push(ServerMessage::PlayerState(PlayerStateMessage {
+            state: PlayerState::Playing,
+        }));
 
         for (row, cols) in self.state.iter().enumerate() {
             for (col, field) in cols.iter().enumerate() {
@@ -259,6 +265,11 @@ impl Game {
         use ClientMessage::*;
         match message {
             Direction(dir) => self.player_direction(&peer, dir.direction),
+            Restart => {
+                if !self.player_exists(peer) {
+                    self.player_add(peer);
+                }
+            }
             _ => {}
         }
     }
