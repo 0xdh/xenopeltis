@@ -1,14 +1,13 @@
-use std::net::SocketAddr;
-use structopt::StructOpt;
-
 use anyhow::Result;
 use futures::prelude::*;
 use std::collections::BTreeMap;
-use std::io::{stdin, stdout, Write};
+use std::io::{stdout, Write};
 use std::sync::Arc;
 use std::time::Duration;
+use structopt::StructOpt;
+use termion::color::*;
+use termion::cursor::Goto;
 use termion::event::Key;
-use termion::input::TermRead;
 use termion::raw::IntoRawMode;
 use termion::screen::*;
 use termion_input_tokio::TermReadAsync;
@@ -89,18 +88,18 @@ pub async fn draw_task_run(state: Arc<Mutex<State>>) -> Result<()> {
         // draw dirty fields
         for (coordinate, field) in std::mem::take(&mut state_lock.data_dirty).iter() {
             let shape = match field {
-                Field::Empty => "  ",
-                Field::Food(false) => "🍏",
-                Field::Food(true) => "🍎",
-                Field::Snake(_) => "██",
-                Field::Wall => "▒▒",
+                Field::Empty => (None, "  "),
+                Field::Food(false) => (None, "🍏"),
+                Field::Food(true) => (None, "🍎"),
+                Field::Snake(_) => (Some(Fg(Red)), "██"),
+                Field::Wall => (None, "▒▒"),
             };
-            write!(
-                screen,
-                "{}{}",
-                termion::cursor::Goto(2 * coordinate.col as u16 + 1, coordinate.row as u16 + 1),
-                shape
-            )?;
+            let goto = Goto(2 * coordinate.col as u16 + 1, coordinate.row as u16 + 1);
+            let reset = Fg(Reset);
+            match shape {
+                (None, s) => write!(screen, "{}{}", goto, s)?,
+                (Some(c), s) => write!(screen, "{}{}{}{}", goto, c, s, reset)?,
+            }
             state_lock.data.insert(*coordinate, *field);
         }
 
@@ -149,7 +148,7 @@ async fn main() -> Result<()> {
                             _ => unreachable!(),
                         },
                     }))
-                    .await;
+                    .await?;
             }
             _ => {}
         }
