@@ -7,7 +7,7 @@ pub enum ClientMessage {
     Quit,
 }
 
-#[derive(Serialize, Deserialize, Clone, Copy, Debug)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Direction {
     Up,
     Down,
@@ -28,6 +28,16 @@ impl Direction {
             Direction::Down => (1, 0),
             Direction::Left => (0, -1),
             Direction::Right => (0, 1),
+        }
+    }
+
+    pub fn opposite(&self) -> Direction {
+        use Direction::*;
+        match self {
+            Up => Down,
+            Down => Up,
+            Left => Right,
+            Right => Left,
         }
     }
 }

@@ -104,7 +104,11 @@ impl Game {
 
     pub fn player_direction(&mut self, addr: &SocketAddr, dir: Direction) {
         match self.players.get_mut(addr) {
-            Some(player) => player.direction = dir,
+            Some(player) => {
+                if player.direction != dir.opposite() {
+                    player.direction = dir;
+                }
+            },
             None => {}
         }
     }
