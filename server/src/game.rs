@@ -97,7 +97,7 @@ impl Game {
     pub fn player_remove(&mut self, addr: &SocketAddr) {
         if let Some(player) = self.players.remove(addr) {
             for (row, col) in &player.snake {
-                self.state_set(*row, *col, Field::Empty);
+                self.state_set(*row, *col, Field::Food);
             }
         }
     }
@@ -161,7 +161,7 @@ impl Game {
         for player in players {
             if !self.player_tick(player) {
                 info!("Player {} removed", player);
-                self.players.remove(&player);
+                self.player_remove(&player);
             }
         }
     }
