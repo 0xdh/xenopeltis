@@ -16,6 +16,7 @@ use tokio::sync::Mutex;
 use tokio_serde::{formats::SymmetricalBincode, SymmetricallyFramed};
 use tokio_util::codec::{FramedRead, FramedWrite, LengthDelimitedCodec};
 use xenopeltis_common::*;
+use xenopeltis_common::Color;
 
 #[derive(StructOpt, Clone, Debug)]
 pub struct Options {
@@ -72,6 +73,17 @@ pub async fn draw_task(state: Arc<Mutex<State>>) {
     draw_task_run(state).await.unwrap();
 }
 
+fn map_color(color: Color) -> String {
+    match color {
+        Color::Blue => Fg(Blue).to_string(),
+        Color::Cyan => Fg(Cyan).to_string(),
+        Color::Green => Fg(Green).to_string(),
+        Color::Magenta => Fg(Magenta).to_string(),
+        Color::Red => Fg(Red).to_string(),
+        Color::Yellow => Fg(Yellow).to_string(),
+    }
+}
+
 pub async fn draw_task_run(state: Arc<Mutex<State>>) -> Result<()> {
     let mut screen = AlternateScreen::from(stdout().into_raw_mode()?);
     write!(screen, "{}", termion::cursor::Hide)?;
@@ -91,7 +103,7 @@ pub async fn draw_task_run(state: Arc<Mutex<State>>) -> Result<()> {
                 Field::Empty => (None, "  "),
                 Field::Food(false) => (None, "🍏"),
                 Field::Food(true) => (None, "🍎"),
-                Field::Snake(_) => (Some(Fg(Red)), "██"),
+                Field::Snake(color) => (Some(map_color(*color)), "██"),
                 Field::Wall => (None, "▒▒"),
             };
             let goto = Goto(2 * coordinate.col as u16 + 1, coordinate.row as u16 + 1);

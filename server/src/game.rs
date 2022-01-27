@@ -1,11 +1,11 @@
 use anyhow::Result;
 use log::*;
-use rand::Rng;
 use std::collections::BTreeMap;
 use std::collections::VecDeque;
 use std::net::SocketAddr;
 use tokio::sync::broadcast::{channel, Receiver, Sender};
 use xenopeltis_common::*;
+use rand::Rng;
 
 const CHANNEL_SIZE: usize = 1024;
 
@@ -76,7 +76,7 @@ impl Game {
     }
 
     pub fn player_add(&mut self, peer: SocketAddr) -> Receiver<ServerMessage> {
-        let color = Color::default();
+        let color = rand::random();
         let (row, col) = self.empty_field();
         let mut snake = VecDeque::new();
         snake.push_back((row, col));

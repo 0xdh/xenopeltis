@@ -1,4 +1,6 @@
 use serde::{Deserialize, Serialize};
+use rand::Rng;
+use rand::distributions::{Distribution, Standard};
 
 /// Messages coming from the client to the server.
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -69,11 +71,29 @@ pub enum PlayerState {
 }
 
 /// RGB color.
-#[derive(Serialize, Deserialize, Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub struct Color {
-    pub red: u8,
-    pub green: u8,
-    pub blue: u8,
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Color {
+    Blue,
+    Cyan,
+    Green,
+    Magenta,
+    Red,
+    Yellow,
+}
+
+impl Distribution<Color> for Standard {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Color {
+        use Color::*;
+        match rng.gen_range(0..6) {
+            0 => Blue,
+            1 => Cyan,
+            2 => Green,
+            3 => Magenta,
+            4 => Red,
+            5 => Yellow,
+            _ => unreachable!(),
+        }
+    }
 }
 
 /// What is in a field?
