@@ -1,0 +1,23 @@
+[package]
+name = "xenopeltis-websocket"
+version = "0.1.0"
+edition = "2021"
+authors = ["Daniel He <he.daniel@protonmail.com", "Patrick Elsen <pelsen@xfbs.net>"]
+description = "WebSocket proxy for xenopeltis"
+repository = "https://github.com/0xdh/xenopeltis"
+license = "MIT"
+workspace = ".."
+
+[dependencies]
+anyhow = "1.0.53"
+env_logger = "0.9.0"
+log = "0.4.14"
+serde = { version = "1.0.136", features = ["derive"] }
+structopt = "0.3.26"
+tokio = { version = "1.16.1", features = ["net", "macros", "rt-multi-thread"] }
+tokio-tungstenite = "0.16.1"
+xenopeltis-common = { path = "../common", version = "0.2.0" }
+tokio-serde = { version = "0.8.0", features = ["bincode"] }
+tokio-util = { version = "0.6.9", features = ["codec"] }
+serde_json = "1.0.78"
+futures = "0.3.19"

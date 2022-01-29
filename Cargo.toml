@@ -3,5 +3,6 @@
 members = [
     "client",
     "server",
-    "common"
+    "common",
+    "websocket"
 ]
