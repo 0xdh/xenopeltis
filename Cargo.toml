@@ -4,5 +4,6 @@ members = [
     "client",
     "server",
     "common",
-    "websocket"
+    "websocket",
+    "webui"
 ]

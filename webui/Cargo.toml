@@ -1,0 +1,14 @@
+[package]
+name = "xenopeltis-webui"
+version = "0.1.0"
+edition = "2021"
+authors = ["Daniel He <he.daniel@protonmail.com", "Patrick Elsen <pelsen@xfbs.net>"]
+description = "Web interface for xenopeltis snake game"
+repository = "https://github.com/0xdh/xenopeltis"
+license = "MIT"
+workspace = ".."
+
+[dependencies]
+getrandom = { version = "0.2.4", features = ["js"] }
+xenopeltis-common = { path = "../common", version = "0.2.0" }
+yew = "0.19"
