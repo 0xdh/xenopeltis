@@ -10,5 +10,5 @@ workspace = ".."
 
 [dependencies]
 getrandom = { version = "0.2.4", features = ["js"] }
-xenopeltis-common = { path = "../common", version = "0.2.0" }
+xenopeltis-common = { path = "../common", version = "0.2.1" }
 yew = "0.19"

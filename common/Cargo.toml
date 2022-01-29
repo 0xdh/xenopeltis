@@ -1,6 +1,6 @@
 [package]
 name = "xenopeltis-common"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2021"
 authors = ["Daniel He <he.daniel@protonmail.com", "Patrick Elsen <pelsen@xfbs.net>"]
 description = "Common files shared by xenopeltis server and client"

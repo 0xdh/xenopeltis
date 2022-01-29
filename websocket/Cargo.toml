@@ -16,7 +16,7 @@ serde = { version = "1.0.136", features = ["derive"] }
 structopt = "0.3.26"
 tokio = { version = "1.16.1", features = ["net", "macros", "rt-multi-thread"] }
 tokio-tungstenite = "0.16.1"
-xenopeltis-common = { path = "../common", version = "0.2.0" }
+xenopeltis-common = { path = "../common", version = "0.2.1" }
 tokio-serde = { version = "0.8.0", features = ["bincode"] }
 tokio-util = { version = "0.6.9", features = ["codec"] }
 serde_json = "1.0.78"

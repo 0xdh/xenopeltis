@@ -1,6 +1,6 @@
 [package]
 name = "xenopeltis"
-version = "0.2.1"
+version = "0.2.2"
 edition = "2021"
 authors = ["Daniel He <he.daniel@protonmail.com", "Patrick Elsen <pelsen@xfbs.net>"]
 description = "Multiplayer terminal snake game"
@@ -17,4 +17,4 @@ termion-input-tokio = "0.3.0"
 tokio = { version = "1.15.0", features = ["rt", "macros", "net", "io-std", "time"] }
 tokio-serde = { version = "0.8.0", features = ["bincode"] }
 tokio-util = { version = "0.6.9", features = ["codec"] }
-xenopeltis-common = { path = "../common", version = "0.2.0" }
+xenopeltis-common = { path = "../common", version = "0.2.1" }
