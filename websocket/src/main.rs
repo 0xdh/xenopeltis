@@ -1,7 +1,7 @@
 use anyhow::Result;
 use futures::{SinkExt, StreamExt};
 use log::*;
-use serde_json::from_str;
+use serde_json::{from_str, to_string};
 use std::net::SocketAddr;
 use std::sync::Arc;
 use structopt::StructOpt;
@@ -49,21 +49,28 @@ async fn handle_connection_real(
         framed_connection,
         Bincode::<ServerMessage, ClientMessage>::default(),
     );
+    info!("Connected to server for {}", peer);
 
-    select! {
-        message = messages.next() => {
-            match message {
-                Some(Ok(message)) => websocket.send(Message::Text(serde_json::to_string(&message)?)).await?,
-                _ => {},
+    loop {
+        select! {
+            message = messages.next() => {
+                match message {
+                    Some(Ok(message)) => {
+                        debug!("Got message for peer {}: {:?}", peer, &message);
+                        websocket.send(Message::Text(to_string(&message)?)).await?
+                    }
+                    _ => break,
+                }
             }
-        }
-        message = websocket.next() => {
-            match message {
-                Some(Ok(Message::Text(message))) => {
-                    let message: ClientMessage = from_str(&message)?;
-                    messages.send(message).await?;
-                },
-                _ => {},
+            message = websocket.next() => {
+                match message {
+                    Some(Ok(Message::Text(message))) => {
+                        debug!("Got websocket message for peer {}: {}", peer, &message);
+                        let message: ClientMessage = from_str(&message)?;
+                        messages.send(message).await?;
+                    },
+                    _ => break,
+                }
             }
         }
     }
@@ -75,17 +82,17 @@ async fn handle_connection_real(
 async fn main() -> Result<()> {
     env_logger::init();
     let options = Arc::new(Options::from_args());
+    debug!("Parsed options: {:?}", options);
 
     let listener = TcpListener::bind(options.listen).await?;
 
     loop {
         match listener.accept().await {
             Ok((stream, peer)) => {
+                info!("Accepted connection from {}", peer);
                 tokio::spawn(handle_connection(options.clone(), stream, peer));
             }
             Err(e) => error!("Error accepting connection: {}", e),
         }
     }
-
-    Ok(())
 }

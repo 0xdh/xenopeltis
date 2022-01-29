@@ -15,8 +15,8 @@ use tokio::net::{tcp::OwnedReadHalf, TcpStream};
 use tokio::sync::Mutex;
 use tokio_serde::{formats::SymmetricalBincode, SymmetricallyFramed};
 use tokio_util::codec::{FramedRead, FramedWrite, LengthDelimitedCodec};
-use xenopeltis_common::*;
 use xenopeltis_common::Color;
+use xenopeltis_common::*;
 
 #[derive(StructOpt, Clone, Debug)]
 pub struct Options {

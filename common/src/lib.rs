@@ -1,6 +1,6 @@
-use serde::{Deserialize, Serialize};
-use rand::Rng;
 use rand::distributions::{Distribution, Standard};
+use rand::Rng;
+use serde::{Deserialize, Serialize};
 
 /// Messages coming from the client to the server.
 #[derive(Serialize, Deserialize, Clone, Debug)]
